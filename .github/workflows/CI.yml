@@ -25,7 +25,6 @@ jobs:
       with:
         target: aarch64-unknown-linux-musl
         manylinux: musllinux_1_1
-        container: off
         args: --release -o dist -i python3.9
     - name: Upload wheels
       uses: actions/upload-artifact@v2
