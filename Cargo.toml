@@ -1,0 +1,19 @@
+[package]
+name = "ohio"
+version = "0.1.0"
+edition = "2021"
+
+[tool.maturin]
+python-source = "pysrc"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "ohio"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.17.2", features = ["macros", "chrono"] }
+
+[features]
+extension-module = ["pyo3/extension-module"]
+default = ["extension-module"]

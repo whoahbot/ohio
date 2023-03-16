@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: messense/maturin-action@v1
+      with:
+        target: aarch64-unknown-linux-musl
+        manylinux: auto
+        command: build
+        args: --release -o dist
+    - name: Build Wheels - musllinux
+      uses: PyO3/maturin-action@main
+      with:
+        target: aarch64-unknown-linux-musl
+        manylinux: musllinux_1_1
+        container: off
+        args: --release -o dist
+    - name: Upload wheels
+      uses: actions/upload-artifact@v2
+      with:
+        name: wheels
+        path: dist

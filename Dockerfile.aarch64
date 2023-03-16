@@ -1,0 +1,5 @@
+ARG PYTHON_VERSION=3.9
+
+FROM quay.io/pypa/manylinux2014_aarch64
+
+COPY . .
