@@ -9,19 +9,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: 3.9
+    - name: Setup QEMU
+      uses: docker/setup-qemu-action@v1
     - uses: messense/maturin-action@v1
       with:
         target: aarch64-unknown-linux-musl
         manylinux: auto
         command: build
-        args: --release -o dist
+        args: --release -o dist -i python3.9
     - name: Build Wheels - musllinux
       uses: PyO3/maturin-action@main
       with:
         target: aarch64-unknown-linux-musl
         manylinux: musllinux_1_1
         container: off
-        args: --release -o dist
+        args: --release -o dist -i python3.9
     - name: Upload wheels
       uses: actions/upload-artifact@v2
       with:
