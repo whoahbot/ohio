@@ -14,18 +14,15 @@ jobs:
         python-version: 3.9
     - name: Setup QEMU
       uses: docker/setup-qemu-action@v1
-    - uses: messense/maturin-action@v1
-      with:
-        target: aarch64-unknown-linux-musl
-        manylinux: auto
-        command: build
-        args: --release -o dist -i python3.9
     - name: Build Wheels - musllinux
       uses: PyO3/maturin-action@main
       with:
         target: aarch64-unknown-linux-musl
         manylinux: musllinux_1_1
         args: --release -o dist -i python3.9
+        before-script-linux: |
+          apt update
+          apt install -y openssl libssl-dev
     - name: Upload wheels
       uses: actions/upload-artifact@v2
       with:
