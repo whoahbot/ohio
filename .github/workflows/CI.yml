@@ -41,12 +41,13 @@ jobs:
         uses: mozilla-actions/sccache-action@v0.0.3
         with:
           version: "v0.5.3"
-      - uses: actions/setup-python@v4
+      - name: Setup Python
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
-      - uses: dtolnay/rust-toolchain@stable
-        id: rustup
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
       - name: Install aarch64-apple-darwin Rust target
         if: matrix.os == 'macos-latest'
         run: rustup target add aarch64-apple-darwin
@@ -69,9 +70,8 @@ jobs:
         run: |
           brew install gnu-tar
           echo "/usr/local/opt/gnu-tar/libexec/gnubin" >> $GITHUB_PATH
-        uses: messense/maturin-action@main
+      - uses: PyO3/maturin-action@v1
         with:
-          target: aarch64-unknown-linux-musl
           args: --release -o dist -i python${{ matrix.python-version }}
       - name: Upload wheels
         uses: actions/upload-artifact@v2
