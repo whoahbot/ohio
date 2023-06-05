@@ -30,6 +30,11 @@ jobs:
         run: |
           sudo apt update
           sudo apt install libssl-dev libsasl2-dev pkg-config openssl protobuf-compiler
+      - uses: ilammy/msvc-dev-cmd@v1
+      - shell: cmd
+        if: matrix.os == 'windows-latest'
+        run: |
+          set PATH=%PATH%;%wix%bin;"%WindowsSdkVerBinPath%"\x86
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
         with:
