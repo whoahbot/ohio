@@ -3,17 +3,27 @@ name = "ohio"
 version = "0.1.0"
 edition = "2021"
 
-[tool.maturin]
-python-source = "pysrc"
-
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
 name = "ohio"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = { version = "0.17.2", features = ["macros", "chrono"] }
-rdkafka = { version = "0.29.0", features = [ "cmake-build", "ssl" ] }
+pyo3 = { version = "0.18.3", features = ["macros", "chrono"] }
+
+# For macos, use vendored gssapi
+[target.'cfg(target_os = "macos")'.dependencies]
+rdkafka = { version = "0.28.0", features = [ "cmake-build", "gssapi-vendored", "ssl-vendored" ] }
+
+# For everything else, use system sasl-lib
+[target.'cfg(not(target_os = "macos"))'.dependencies]
+rdkafka = { version = "0.28.0", features = [ "cmake-build", "gssapi", "ssl" ] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+sasl2-sys = {version="0.1.20",features=[ "vendored", "openssl-vendored" ]}
+
+[build-dependencies]
+openssl-src = { version = "111", default-features = false, features = ["force-engine"] }
 
 [features]
 extension-module = ["pyo3/extension-module"]
