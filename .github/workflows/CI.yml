@@ -2,29 +2,79 @@ name: CI
 
 on:
   push:
-  pull_request:
+    paths-ignore:
+      - "apidocs/**"
+      - "**.md"
+      - ".github/ISSUE_TEMPLATE/**"
+  merge_group:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+
 
 jobs:
-  linux:
-    runs-on: ubuntu-latest
+  build:
+    strategy:
+      matrix:
+        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
+        os: ['ubuntu-latest', 'macos-latest', 'windows-latest']
+    runs-on: ${{ matrix.os }}
+    env:
+      SCCACHE_GHA_ENABLED: "true"
+      RUSTC_WRAPPER: "sccache"
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
-      with:
-        python-version: 3.9
-    - name: Setup QEMU
-      uses: docker/setup-qemu-action@v1
-    - name: Build Wheels - musllinux
-      uses: PyO3/maturin-action@main
-      with:
-        target: aarch64-unknown-linux-musl
-        manylinux: musllinux_1_1
-        args: --release -o dist -i python3.9
-        before-script-linux: |
-          apt update
-          apt install -y openssl libssl-dev
-    - name: Upload wheels
-      uses: actions/upload-artifact@v2
-      with:
-        name: wheels
-        path: dist
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}        
+      - name: Sccache Setup
+        uses: mozilla-actions/sccache-action@v0.0.3
+        with:
+          version: "v0.5.3"
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: x64
+      - uses: dtolnay/rust-toolchain@stable
+        id: rustup
+      - name: Install aarch64-apple-darwin Rust target
+        if: matrix.os == 'macos-latest'
+        run: rustup target add aarch64-apple-darwin
+      - name: Setup Xcode env
+        if: matrix.os == 'macos-latest'
+        shell: bash
+        run: |
+          set -ex
+          sudo xcode-select -s /Applications/Xcode.app
+          bindir="$(xcode-select --print-path)/Toolchains/XcodeDefault.xctoolchain/usr/bin"
+          echo "CC=${bindir}/clang" >> "${GITHUB_ENV}"
+          echo "CXX=${bindir}/clang++" >> "${GITHUB_ENV}"
+          echo "SDKROOT=$(xcrun --sdk macosx --show-sdk-path)" >> "${GITHUB_ENV}"
+
+      # Caching
+      # Install gnu-tar because BSD tar is buggy
+      # https://github.com/actions/cache/issues/403
+      - name: Install GNU tar (Macos)
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew install gnu-tar
+          echo "/usr/local/opt/gnu-tar/libexec/gnubin" >> $GITHUB_PATH
+        uses: messense/maturin-action@main
+        with:
+          target: aarch64-unknown-linux-musl
+          args: --release -o dist -i python${{ matrix.python-version }}
+      - name: Upload wheels
+        uses: actions/upload-artifact@v2
+        with:
+          name: wheels
+          path: dist
