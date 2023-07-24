@@ -1,16 +1,8 @@
 name: CI
 
-on:
-  push:
-    branches:
-      - main
-    paths-ignore:
-      - "apidocs/**"
-      - "**.md"
-      - ".github/ISSUE_TEMPLATE/**"
-  pull_request: {}
-  merge_group:
-  workflow_dispatch:
+ on:
+   push:
+   pull_request:
     
 jobs:
   linux:
