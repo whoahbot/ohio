@@ -41,7 +41,7 @@ fn start_consumer() {
         .set("enable.partition.eof", "false")
         .set("session.timeout.ms", "6000")
         .set("enable.auto.commit", "true")
-        //.set("statistics.interval.ms", "30000")
+        .set("statistics.interval.ms", "30000")
         //.set("auto.offset.reset", "smallest")
         .set_log_level(RDKafkaLogLevel::Debug)
         .create_with_context(context)
